@@ -27,6 +27,9 @@ P - permutations
                    нижнего поддиагонального треугольника матрицы А и
                    верхнего треугольника А с её диагональю
 
+
+The permutation P in A=LPU is uniquely determined by A.
+http://www-math.mit.edu/~gs/papers/Paper7_ver8.pdf
 #
 # Task2:
 #
