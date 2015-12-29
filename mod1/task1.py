@@ -26,7 +26,10 @@ def mprint(args, pretty=False):
     else:
         print(args)
 
-
+# This seems to be Partial Pivoting (частичный выбор по строке), described in the following (page 6, 3.1):
+# http://archives.math.utk.edu/ICTCM/VOL08/C006/paper.pdf [1]
+# This function does it all at once (not at every step of Gaussian elimination,
+# as recommended in LecV.pdf page 30).
 def pivot_matrix(M):
     """Returns the pivoting matrix for M, used in Doolittle's method."""
     m = len(M)
@@ -34,21 +37,34 @@ def pivot_matrix(M):
     # Create an identity matrix, with floating point values
     id_mat = np.matrix([[float(i == j) for i in range(m)] for j in range(m)])
 
-    # Rearrange the identity matrix such that the largest element of
-    # each column of M is placed on the diagonal of of M
+
+    # Rearrange the identity matrix such that: the largest element of
+    # first column of M is placed on the diagonal of of M. Then same thing for
+    # submatrix of M, and so on.
+    #
+    # For example:
+    #
+    # 1 2 3
+    # 4 5 6
+    # 7 8 9
+    #
+    # step 0, whole matrix, 7 is the largest element of the first column, move it to diagonal (swap row 1 and 3).
+    #
+    # 7 8 9
+    # 4 5 6   submatrix:  5 6
+    # 1 2 3               2 3
+    #
+    # step 1, 2x2 submatrix of interest, 5 is the largest element of the first column, already on diagonal.
+    #
+    # step 2, 1x1 submatrix, nothing to do.
     for j in range(m):
         row = max(
             range(j, m), key=lambda i: abs(M[i, j])
+            # M_ij = max from i=j to m of abs(M_ij), as in pdf [1] (page 6, 3.1)
         )
         if j != row:
             # Swap the rows
             id_mat[j], id_mat[row] = id_mat[row], id_mat[j]
-
-    # return np.matrix([
-    #     [0, 1, 0],
-    #     [1, 0, 0],
-    #     [0, 0, 1],
-    # ])
 
     return np.matrix(id_mat)
 
