@@ -1,0 +1,14 @@
+короче с какой-то по 37 страницу у голубкова лекции как бы кажется что покрывают эти три задачи
+
+
+стр. 29 - начинается малафья про метод Гаусса
+
+A = LPU
+L - lower
+U - upper
+P - permutations
+
+
+Брюа = Bruhat   | https://en.wikipedia.org/wiki/Bruhat_decomposition
+LU decomposition | https://en.wikipedia.org/wiki/LU_decomposition
+
