@@ -1,7 +1,12 @@
-короче с какой-то по 37 страницу у голубкова лекции как бы кажется что покрывают эти три задачи
-
-
-стр. 29 - начинается малафья про метод Гаусса
+#
+# Task1:
+# https://www.quantstart.com/articles/LU-Decomposition-in-Python-and-NumPy
+# http://www.math.unm.edu/~loring/links/linear_s08/LU.pdf
+#
+# LU decomposition | https://en.wikipedia.org/wiki/LU_decomposition
+# Брюа = Bruhat   | https://en.wikipedia.org/wiki/Bruhat_decomposition
+#
+#
 
 A = LPU
 L - lower
@@ -9,6 +14,33 @@ U - upper
 P - permutations
 
 
-Брюа = Bruhat   | https://en.wikipedia.org/wiki/Bruhat_decomposition
-LU decomposition | https://en.wikipedia.org/wiki/LU_decomposition
+1) Нужно сделать матрицу А
+2) Сделать 3 вида разложений:
+    1. A=PLU ("наверное, это выбор по строке")
+    2. A=LUP ("наверное, это выбор по столбцу")
+    3. A=PLUP' ("наверное, это выбор по всей матрице")
+    4. A=LPL (разложение Брюа)
+    5. A=LPU (его модифицированная версия)
+       где {P_i} - в виде отдельных векторов матрицы-перестановки
+           {L_i} - нижние треугольные матрицы
+           {U_i} - верхние унитреугольные матрицы, которые хранятся на месте
+                   нижнего поддиагонального треугольника матрицы А и
+                   верхнего треугольника А с её диагональю
 
+#
+# Task2:
+#
+#
+
+
+#
+# Task3:
+#
+#
+
+
+#
+# Лекции
+#
+1) До 37 страницы полезный материал по всему блоку
+2) стр. 29 и далее - метод Гаусса
