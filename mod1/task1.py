@@ -18,6 +18,26 @@ test_matricies = [
         [2, -2, 0],
     ]),
 
+    # LUP / PLU, p.3: http://www.math.unm.edu/~loring/links/linear_s08/LU.pdf
+    np.matrix([
+        [2, 1, 0, 1],
+        [2, 1, 2, 3],
+        [0, 0, 1, 2],
+        [-4, -1, 0, -2],
+    ]),
+
+    # Для Брюа: http://mathpar.com/ru/help/08matrix.html
+    np.matrix([
+        [1, 4, 0, 1],
+        [4, 5, 5, 3],
+        [1, 2, 2, 2],
+        [3, 0, 0, 1],
+    ]),
+
+    np.matrix([
+        [0, 2],
+        [1, 4],
+    ])
 ]
 
 def mprint(args, pretty=False):
@@ -99,6 +119,45 @@ def lu_decomposition(A):
 
     return (P, L, U)
 
+#
+# Bruhat: modified
+# http://math.stackexchange.com/questions/290707/decompose-a-as-a-lpu
+# https://goo.gl/UD5QqR proof by construction
+# http://www.math.uiuc.edu/~mando/classes/2010F/416-manual/hw6-solutions.pdf
+#
+def LPU_decomposition(A: np.matrix) -> (np.matrix, np.matrix, np.matrix):
+    # Consider the first (from the left) nonzero entry in the first row of A.
+    # Call it the pivoting entry.
+    #
+    # Posmultiplication by an upper triangular matrix can kill all subsequent entries in the first row
+    # and make the pivoting entry equal to 1.
+    #
+    # Next, premultiplication by a lower triangular matrix can be used to zero all entries which are located
+    # below the pivoting one in its column. Once this is done, we find a new pivoting entry, that is,
+    # the first nonzero entry in the second row of the current matrix. Using postmultiplication,
+    # we annihilate all entries to the right of the pivoting one in the second row,
+    # and using premultiplication, then, we get rid of all entries below the pivoting one in its column, and so on.
+    # In the end, we arrive at some permutational matrix P.
+    #
+    #
+    size = A.ndim
+    return np.identity(size), np.identity(size), np.identity(size)
+
+
+#
+# Bruhat: classic
+# http://mathpar.com/ru/help/08matrix.html
+#
+def LPL_decomposition(A: np.matrix) -> (np.matrix, np.matrix, np.matrix):
+    #  Стр. 27, матрица Q имеет единицы на побочной диагонали
+    Q = np.identity(A.ndim)
+    Q = Q[::-1]
+
+    # AQ = LPU
+    L, P, U = LPU_decomposition(A@Q)
+
+    Ls = Q @ U @ Q
+    return L @ (P@Q) @ Ls
 
 
 A = test_matricies[0]
