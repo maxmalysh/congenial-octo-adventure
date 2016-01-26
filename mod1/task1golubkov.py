@@ -33,7 +33,6 @@ def pivot_by_column(A: np.matrix, k: int, column_permutation: List[float]):
             column_with_max_leading_elem = i
 
     if column_with_max_leading_elem != k:
-        # swap rows k, row_with_max_leading_elem
         column_permutation[column_permutation[k]] = column_with_max_leading_elem
         column_permutation[column_permutation[column_with_max_leading_elem]] = k
 
@@ -50,11 +49,10 @@ def pivot_by_matrix(A: np.matrix, k: int, row_permutation: List[float], column_p
                 row_with_max_leading_elem = i
                 column_with_max_leading_elem = j
 
-    if row_with_max_leading_elem != k:
-        row_permutation[row_permutation[k]] = row_with_max_leading_elem
-        row_permutation[row_permutation[row_with_max_leading_elem]] = k
-        column_permutation[column_permutation[k]] = column_with_max_leading_elem
-        column_permutation[column_permutation[column_with_max_leading_elem]] = k
+    row_permutation[row_permutation[k]] = row_with_max_leading_elem
+    row_permutation[row_permutation[row_with_max_leading_elem]] = k
+    column_permutation[column_permutation[k]] = column_with_max_leading_elem
+    column_permutation[column_permutation[column_with_max_leading_elem]] = k
 
 
 def pivot(A: np.matrix, k: int, mode: PivotMode, row_permutation: List[float], column_permutation: List[float]):
