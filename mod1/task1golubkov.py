@@ -9,77 +9,91 @@ test_matrices = [
         [3, 8, 1, -4],
         [-1, 1, 4, -1],
         [2, -4, -1, 6],
-    ]),
+    ], dtype=float),
 
     np.matrix([
+        [2, -2, 0],
         [0,  1, 0],
         [-8, 8, 1],
-        [2, -2, 0],
-    ]),
+    ], dtype=float),
 
 ]
 
 def pivot_by_row(A: np.matrix, k: int, row_permutation: List[float]):
     mat_size = A.shape[0]
-    max_row = k # first fow of leading submatrix
+    row_with_max_leading_elem = k # First row of leading submatrix
+
+    # Find the row with largest leading element
     for i in range(k+1, mat_size):
-        if abs(A[row_permutation[i], k]) > abs(A[row_permutation[max_row], k]):
-            max_row = i
+        if abs(A[row_permutation[i], k]) >= abs(A[row_permutation[row_with_max_leading_elem], k]):
+            row_with_max_leading_elem = i
 
-    # swap rows k, max_row
-    row_permutation[row_permutation[k]] = max_row
-    row_permutation[row_permutation[max_row]] = k
+    if row_with_max_leading_elem != k:
+        # swap rows k, row_with_max_leading_elem
+        row_permutation[row_permutation[k]] = row_with_max_leading_elem
+        row_permutation[row_permutation[row_with_max_leading_elem]] = k
 
+# Returns: (A, row_permutation) tuple.
+# A - all-in-one matrix: lower unitriangle L, upper tringle U.
+# row_permutation - permutation array for rows. Example: [0, 1, 2] is identity, [1, 0, 2] is rows 0, 1 swapped.
+def decompose_pivoting_by_row(A: np.matrix):
+    n = A.shape[0]
+    row_permutation = [i for i in range(n)] # identity permutation, row_permutation[i] = i
 
-def plu_decompose(A: np.matrix) -> np.matrix:
-    mat_size = A.shape[0]
-    row_permutation = [i for i in range(mat_size)] # identity permutation, row_permutation[i] = i
-
-    for k in range(mat_size): # k: the number of Gauss steps
+    # On this kij decomposition and others:
+    # http://www-users.cselabs.umn.edu/classes/Spring-2014/csci8314/FILES/LecN6.pdf p. 6
+    for k in range(0, n):
         pivot_by_row(A, k, row_permutation)
-        print(str(k) + " " + str(row_permutation))
-        leading_elem = A[row_permutation[k], k] # A_kk is leading element
-        for i in range(k+1, mat_size): # i: row index, the row we subtract scaled first row from
-            scale_factor = A[row_permutation[i], k] / leading_elem
-            for j in range(k+1, mat_size): # j: column index
-                # j starts from second column,
-                #  we do not zero first column, as in usual Gauss elimination
-                A[row_permutation[i], j] -= A[row_permutation[k], j] * scale_factor
+        for i in range(k+1, n):
+            A[row_permutation[i], k] /= A[row_permutation[k], k]
+            for j in range(k+1, n):
+                A[row_permutation[i], j] -= A[row_permutation[i], k]*A[row_permutation[k], j]
+    return A, row_permutation
 
-    return (A, row_permutation)
-
+# Returns: (L, U) tuple.
+# Extract L and U from all-in-one matrix.
 def lu_extract(LU: np.matrix, row_permutation: List[float]):
-    mat_size = A.shape[0]
+    mat_size = LU.shape[0]
     L = np.zeros((mat_size, mat_size))
     U = np.zeros((mat_size, mat_size))
 
     for i in range(mat_size):
         for j in range(mat_size):
             if j > i:
-                U[i, j] = A[row_permutation[i], j]
+                U[i, j] = LU[row_permutation[i], j]
             elif j < i:
-                L[i, j] = A[row_permutation[i], j]
+                L[i, j] = LU[row_permutation[i], j]
             elif j == i:
-                U[i, j] = A[row_permutation[i], j]
+                U[i, j] = LU[row_permutation[i], j]
                 L[i, j] = 1
-                pass
-
-    return (L, U)
+    return L, U
 
 
 A = test_matrices[1]
 
-plu = plu_decompose(A)
-L, U = lu_extract(plu[0], plu[1])
-print (L)
-print (U)
-print (L@U)
-print ()
+print(A)
+print()
 
+print("decompose_pivoting_by_row")
+lu_in_one, P = decompose_pivoting_by_row(A.copy())
+L, U = lu_extract(lu_in_one, P)
+print("P", P)
+print(P)
+print("L")
+print(L)
+print("U")
+print(U)
+print("LU")
+print(L@U)
+print()
 
-
-P, L, U = scipy.linalg.lu(A)
+print("SCIPY")
+P, L, U = scipy.linalg.lu(A.copy())
+print("P")
 print (P)
+print("L")
 print (L)
+print("U")
 print (U)
+print("LU")
 print (L@U)
