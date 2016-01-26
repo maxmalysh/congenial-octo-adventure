@@ -38,17 +38,27 @@ def pivot_by_row(A: np.matrix, k: int, row_permutation: List[float]):
 # row_permutation - permutation array for rows. Example: [0, 1, 2] is identity, [1, 0, 2] is rows 0, 1 swapped.
 def decompose_pivoting_by_row(A: np.matrix):
     n = A.shape[0]
-    row_permutation = [i for i in range(n)] # identity permutation, row_permutation[i] = i
+    p = [i for i in range(n)] # Row permutation. Identity permutation at first, row_permutation[i] = i
 
     # On this kij decomposition and others:
     # http://www-users.cselabs.umn.edu/classes/Spring-2014/csci8314/FILES/LecN6.pdf p. 6
-    for k in range(0, n):
-        pivot_by_row(A, k, row_permutation)
-        for i in range(k+1, n):
-            A[row_permutation[i], k] /= A[row_permutation[k], k]
+    for k in range(0, n): # k - Gaussian step number
+        pivot_by_row(A, k, p)
+        for i in range(k+1, n): # i - row that we will subtract from
+            # Here we look at submatrix that corresponds to k-th Gaussian step.
+            # In Gauss method, we would zero first element of each row below first one.
+            # But here we store divider as first element of respective row, instead:
+            divider = A[p[i], k] / A[p[k], k]
+            A[p[i], k] = divider
+            # And the rest of elements in the row is subtracted from as usual:
             for j in range(k+1, n):
-                A[row_permutation[i], j] -= A[row_permutation[i], k]*A[row_permutation[k], j]
-    return A, row_permutation
+                A[p[i], j] -= A[p[k], j] * divider
+    # Now in A we have these elements:
+    # diagonal and above diagonal: result of usual Gaussian method,
+    # below diagonal: all the dividers for each Gaussian step.
+    # So we actually have complete information about all elementary
+    # transformations we performed: dividers and row swaps that are stored in p.
+    return A, p
 
 # Returns: (L, U) tuple.
 # Extract L and U from all-in-one matrix.
