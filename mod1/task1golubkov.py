@@ -9,6 +9,7 @@ class PivotMode(Enum):
     BY_COLUMN = 1
     BY_MATRIX = 2
 
+
 def pivot_by_row(A: np.matrix, k: int, row_permutation: List[float]):
     mat_size = A.shape[0]
     row_with_max_leading_elem = k # First row of leading submatrix
@@ -65,40 +66,42 @@ def pivot(A: np.matrix, k: int, mode: PivotMode, row_permutation: List[float], c
 
 
 '''
-PLU (pivoting by row), LUP (pivoting by column), PLUP' (pivoting by submatrix) decompositions.
+Decompositions:
+- PLU (pivoting by row)
+- LUP (pivoting by column)
+- PLUP' (pivoting by submatrix)
+
+where
+L is lower triangular,
+U is upper unitriangular
+(like in the task).
 
 Returns: (A, row_permutation, column_permutation) tuple.
-A - all-in-one matrix: lower unitriangle L, upper tringle U.
+A - all-in-one matrix for L, U.
 row_permutation - permutation array for rows. Example: [0, 1, 2] is identity, [1, 0, 2] is rows 0, 1 swapped.
 column_permutation - permutation array for columns.
 
-For PLU, returned column_permutation is always identity, likewise row_permutation is always identity for LUP.
+For PLU, returned column_permutation is always identity, likewise for LUP row_permutation is always identity.
 '''
-
 
 def lu_decompose_pivoting(A: np.matrix, mode: PivotMode):
     n = A.shape[0]
     row_perm = [i for i in range(n)]  # Row permutation. Identity permutation at first.
     column_perm = [i for i in range(n)]  # And column permutation.
 
-    # On this kij decomposition and others:
-    # http://www-users.cselabs.umn.edu/classes/Spring-2014/csci8314/FILES/LecN6.pdf p. 6
     for k in range(0, n): # k - Gaussian step number
         pivot(A, k, mode, row_perm, column_perm)
+        # Divide the first row of current Gaussian step's submatrix by its leading element. (LecV.pdf p. 18, point 1).
+        # The leading element itself is preserved (LecV.pdf p. 21).
+        for j in range(k + 1, n):
+            A[row_perm[k], column_perm[j]] /= A[row_perm[k], column_perm[k]]
+        # From each row below the first one in current Gaussian step's submatrix,
+        # subtract the first row multiplied by the first element of the row we subtract from. (LecV.pdf p. 18, point 2).
+        # First elements are preserved. (LecV.pdf p. 21).
         for i in range(k+1, n): # i - row that we will subtract from
-            # Here we look at submatrix that corresponds to k-th Gaussian step.
-            # In Gauss method, we would zero first element of each row below first one.
-            # But here we store divider as first element of respective row, instead:
-            divider = A[row_perm[i], column_perm[k]] / A[row_perm[k], column_perm[k]]
-            A[row_perm[i], column_perm[k]] = divider
-            # And the rest of elements in the row is subtracted from as usual:
-            for j in range(k+1, n):
-                A[row_perm[i], column_perm[j]] -= A[row_perm[k], column_perm[j]] * divider
-    # Now in A we have these elements:
-    # diagonal and above diagonal: result of usual Gaussian method,
-    # below diagonal: all the dividers for each Gaussian step.
-    # So we actually have complete information about all elementary
-    # transformations we performed: dividers and row swaps that are stored in p.
+            for j in range(k + 1, n):  # j - column index
+                A[row_perm[i], column_perm[j]] -= A[row_perm[k], column_perm[j]] * A[row_perm[i], column_perm[k]]
+
     return A, row_perm, column_perm
 
 
@@ -107,7 +110,6 @@ Extract L and U from all-in-one matrix.
 
 Returns: (L, U) tuple.
 '''
-
 
 def lu_extract(LU: np.matrix, row_permutation: List[float], column_permutation: List[float]):
     mat_size = LU.shape[0]
@@ -121,8 +123,8 @@ def lu_extract(LU: np.matrix, row_permutation: List[float], column_permutation: 
             elif j < i:
                 L[i, j] = LU[row_permutation[i], column_permutation[j]]
             elif j == i:
-                U[i, j] = LU[row_permutation[i], column_permutation[j]]
-                L[i, j] = 1
+                L[i, j] = LU[row_permutation[i], column_permutation[j]]
+                U[i, j] = 1
     return L, U
 
 
@@ -144,7 +146,7 @@ def demo():
     ]
 
     A = test_matrices[1]
-    mode = PivotMode.BY_MATRIX
+    mode = PivotMode.BY_ROW
 
     print(A)
     print()
