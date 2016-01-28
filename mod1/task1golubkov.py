@@ -106,6 +106,66 @@ def lu_decompose_pivoting(A: np.matrix, mode: PivotMode):
 
 
 '''
+LPU decomposition:
+
+where
+L is lower triangular,
+U is upper unitriangular,
+P is transposition matrix.
+(like in the task).
+
+# Not an in-place algorithm.
+'''
+
+
+def lpu_decompose(A: np.matrix):
+    n = A.shape[0]
+    L = np.identity(A.shape[0])
+    U = np.identity(A.shape[0])
+
+    # The algorithm: LecV.pdf p. 27.
+    for k in range(0, n):  # k - Gaussian step number
+        first_nonzero_elem_j = np.where(A[k] != 0)[1][
+            0]  # Get tuple: (nonzero elements of row A[k], their indices). Get indices, get first index.
+        first_nonzero_elem = A[k, first_nonzero_elem_j]
+
+        # L, U start as identity matrices.
+        # L accumulates inverses L^(-1)_k of Gaussian step transformation matrices applied to rows.
+        # U accumulates inverses U^(-1)_k of Gaussian step transformation matrices applied to columns.
+        # The matrices L_k, U_k that perform transformation done at k-th Gaussian step are provided in LecV.pdf p. 28.
+        # Their inverses L^(-1)_k, U^(-1)_k are straightforward: invert diagonal elements,
+        # multiply non-diagonal elements by -1 and divide by the diagonal element.
+
+        # Scale the row
+        for j in range(0, n):
+            A[k, j] /= first_nonzero_elem
+
+        # Store inverse row scale operation in L
+        L[k, k] = first_nonzero_elem
+
+        # Eliminate rows
+        for s in range(k + 1, n):  # s - row to subtract from, to zero all elements below first_nonzero_elem.
+            multiplier = A[s, first_nonzero_elem_j]
+            for j in range(0, n):
+                A[s, j] -= A[k, j] * multiplier
+            # Store inverse row elimination operation in L
+            L[s, k] = multiplier
+
+        # Eliminate columns
+        for t in range(first_nonzero_elem_j + 1,
+                       n):  # t - column to subtract from, to zero all elements to the right of first_nonzero_elem.
+            multiplier = A[k, t] / A[k, first_nonzero_elem_j]
+            for i in range(0, n):
+                A[i, t] -= A[i, first_nonzero_elem_j] * multiplier
+            # Store inverse column elimination operation in U
+            U[first_nonzero_elem_j, t] = multiplier
+
+    P = A
+    return L, P, U
+
+
+
+'''
 Extract L and U from all-in-one matrix.
 
 Returns: (L, U) tuple.
@@ -139,43 +199,26 @@ def demo():
         ], dtype=float),
 
         np.matrix([
-            [2, -2, 0],
             [0, 1, 0],
             [-8, 8, 1],
+            [2, -2, 0],
         ], dtype=float),
     ]
 
     A = test_matrices[1]
-    mode = PivotMode.BY_ROW
 
     print(A)
     print()
 
-    print("lu_decompose_pivoting: " + str(mode))
-    lu_in_one, P, P_ = lu_decompose_pivoting(A.copy(), mode)
-    L, U = lu_extract(lu_in_one, P, P_)
-    print("P")
-    print(P)
-    print("P'")
-    print(P_)
+    L, P, U = lpu_decompose(A.copy())
     print("L")
     print(L)
-    print("U")
-    print(U)
-    print("LU")
-    print(L @ U)
-    print()
-
-    print("SCIPY")
-    P, L, U = scipy.linalg.lu(A.copy())
     print("P")
     print(P)
-    print("L")
-    print(L)
     print("U")
     print(U)
-    print("LU")
-    print(L @ U)
+    print("LPU")
+    print(L @ P @ U)
 
 
 if __name__ == "__main__":
