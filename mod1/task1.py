@@ -20,8 +20,9 @@ def pivot_by_row(A: np.matrix, k: int, row_permutation: List[float]):
 
     if row_with_max_leading_elem != k:
         # swap rows k, row_with_max_leading_elem
-        row_permutation[row_permutation[k]] = row_with_max_leading_elem
-        row_permutation[row_permutation[row_with_max_leading_elem]] = k
+        row_perm_k_saved = row_permutation[k]
+        row_permutation[k] = row_permutation[row_with_max_leading_elem]
+        row_permutation[row_with_max_leading_elem] = row_perm_k_saved
 
 
 def pivot_by_column(A: np.matrix, k: int, column_permutation: List[float]):
@@ -33,8 +34,9 @@ def pivot_by_column(A: np.matrix, k: int, column_permutation: List[float]):
             column_with_max_leading_elem = i
 
     if column_with_max_leading_elem != k:
-        column_permutation[column_permutation[k]] = column_with_max_leading_elem
-        column_permutation[column_permutation[column_with_max_leading_elem]] = k
+        column_perm_k_saved = column_permutation[k]
+        column_permutation[k] = column_permutation[column_with_max_leading_elem]
+        column_permutation[column_with_max_leading_elem] = column_perm_k_saved
 
 
 def pivot_by_matrix(A: np.matrix, k: int, row_permutation: List[float], column_permutation: List[float]):
@@ -45,14 +47,18 @@ def pivot_by_matrix(A: np.matrix, k: int, row_permutation: List[float], column_p
     for i in range(k + 1, mat_size):
         for j in range(k + 1, mat_size):
             if abs(A[row_permutation[i], column_permutation[k]]) > abs(
-                    A[row_permutation[row_with_max_leading_elem], column_permutation[k]]):
+                    A[row_permutation[row_with_max_leading_elem], column_permutation[column_with_max_leading_elem]]):
                 row_with_max_leading_elem = i
                 column_with_max_leading_elem = j
 
-    row_permutation[row_permutation[k]] = row_with_max_leading_elem
-    row_permutation[row_permutation[row_with_max_leading_elem]] = k
-    column_permutation[column_permutation[k]] = column_with_max_leading_elem
-    column_permutation[column_permutation[column_with_max_leading_elem]] = k
+    if row_with_max_leading_elem != k:
+        row_perm_k_saved = row_permutation[k]
+        row_permutation[k] = row_permutation[row_with_max_leading_elem]
+        row_permutation[row_with_max_leading_elem] = row_perm_k_saved
+    if column_with_max_leading_elem != k:
+        column_perm_k_saved = column_permutation[k]
+        column_permutation[k] = column_permutation[row_with_max_leading_elem]
+        column_permutation[column_with_max_leading_elem] = column_perm_k_saved
 
 
 def pivot(A: np.matrix, k: int, mode: PivotMode, row_permutation: List[float], column_permutation: List[float]):
@@ -253,32 +259,16 @@ def demo():
 
     ]
 
-    A = test_matrices[1]
+    A = test_matrices[4]
 
     print(A)
     print()
 
-    L, P, U = lpu_decompose(A.copy())
-    print("L")
-    print(L)
-    print("P")
+    lu_in_one, P, P_ = lu_decompose_pivoting(A.copy(), PivotMode.BY_MATRIX)
+    L, U = lu_extract(lu_in_one, P, P_)
     print(P)
-    print("U")
-    print(U)
-    print("LPU")
-    print(L @ P @ U)
-
-    print()
-
-    L, P, Ls = lpl_decompose(A.copy())
-    print("L")
-    print(L)
-    print("P")
-    print(P)
-    print("L'")
-    print(Ls)
-    print("LPL")
-    print(L @ P @ Ls)
+    print(P_)
+    print(L @ U)
 
 
 if __name__ == "__main__":
