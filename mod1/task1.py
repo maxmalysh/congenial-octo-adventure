@@ -1,44 +1,7 @@
 import numpy as np
 import scipy.linalg
 from pprint import pprint
-
-
-test_matricies = [
-
-    np.matrix([
-        [7, 3, -1, 2],
-        [3, 8, 1, -4],
-        [-1, 1, 4, -1],
-        [2, -4, -1, 6],
-    ]),
-
-    np.matrix([
-        [0,  1, 0],
-        [-8, 8, 1],
-        [2, -2, 0],
-    ]),
-
-    # LUP / PLU, p.3: http://www.math.unm.edu/~loring/links/linear_s08/LU.pdf
-    np.matrix([
-        [2, 1, 0, 1],
-        [2, 1, 2, 3],
-        [0, 0, 1, 2],
-        [-4, -1, 0, -2],
-    ]),
-
-    # Для Брюа: http://mathpar.com/ru/help/08matrix.html
-    np.matrix([
-        [1, 4, 0, 1],
-        [4, 5, 5, 3],
-        [1, 2, 2, 2],
-        [3, 0, 0, 1],
-    ]),
-
-    np.matrix([
-        [0, 2],
-        [1, 4],
-    ])
-]
+from tests import test_matricies
 
 def mprint(args, pretty=False):
     if pretty:
