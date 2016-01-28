@@ -128,55 +128,34 @@ def lu_extract(LU: np.matrix, row_permutation: List[float], column_permutation: 
     return L, U
 
 
-def demo():
-    test_matrices = [
+# @vector - permutation vector as a list, e.g. [2,0,1]
+# @row – boolean determining whether vector is shuffling rows or columns
+def perm_vector_to_matrix(vector, row=True):
+    n = len(vector)
+    matrix = np.zeros(shape=(n,n))
 
-        np.matrix([
-            [7, 3, -1, 2],
-            [3, 8, 1, -4],
-            [-1, 1, 4, -1],
-            [2, -4, -1, 6],
-        ], dtype=float),
+    for i in range(0, n):
+        if row:
+            matrix[vector[i], i] = 1
+        else:
+            matrix[i, vector[i]] = 1
 
-        np.matrix([
-            [2, -2, 0],
-            [0, 1, 0],
-            [-8, 8, 1],
-        ], dtype=float),
-    ]
+    return matrix
 
-    A = test_matrices[1]
+def PLU_decomposition(A):
     mode = PivotMode.BY_ROW
-
-    print(A)
-    print()
-
-    print("lu_decompose_pivoting: " + str(mode))
-    lu_in_one, P, P_ = lu_decompose_pivoting(A.copy(), mode)
+    lu_in_one, P, P_ = lu_decompose_pivoting(A.astype(np.float), mode)
     L, U = lu_extract(lu_in_one, P, P_)
-    print("P")
-    print(P)
-    print("P'")
-    print(P_)
-    print("L")
-    print(L)
-    print("U")
-    print(U)
-    print("LU")
-    print(L @ U)
-    print()
+    return perm_vector_to_matrix(P, row=True), L, U
 
-    print("SCIPY")
-    P, L, U = scipy.linalg.lu(A.copy())
-    print("P")
-    print(P)
-    print("L")
-    print(L)
-    print("U")
-    print(U)
-    print("LU")
-    print(L @ U)
+def LUP_decomposition(A):
+    mode = PivotMode.BY_COLUMN
+    lu_in_one, P, P_ = lu_decompose_pivoting(A.astype(np.float), mode)
+    L, U = lu_extract(lu_in_one, P, P_)
+    return L, U, perm_vector_to_matrix(P_, row=False)
 
-
-if __name__ == "__main__":
-    demo()
+def PLUP_decomposition(A):
+    mode = PivotMode.BY_MATRIX
+    lu_in_one, P, P_ = lu_decompose_pivoting(A.astype(np.float), mode)
+    L, U = lu_extract(lu_in_one, P, P_)
+    return perm_vector_to_matrix(P, row=True), L, U, perm_vector_to_matrix(P_, row=False)
