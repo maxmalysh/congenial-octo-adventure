@@ -124,6 +124,7 @@ P is transposition matrix.
 
 
 def lpu_decompose(A: np.matrix) -> (np.matrix, np.matrix, np.matrix):
+    A = A.copy()
     n = A.shape[0]
     L = np.identity(A.shape[0])
     U = np.identity(A.shape[0])
@@ -273,3 +274,39 @@ def demo():
 
 if __name__ == "__main__":
     demo()
+
+
+'''
+@vector - permutation vector as a list, e.g. [2,0,1]
+@row – boolean determining whether vector is shuffling rows or columns
+'''
+def perm_vector_to_matrix(vector, row=True):
+    n = len(vector)
+    matrix = np.zeros(shape=(n,n))
+
+    for i in range(0, n):
+        if row:
+            matrix[vector[i], i] = 1
+        else:
+            matrix[i, vector[i]] = 1
+
+    return matrix
+
+def PLU_decomposition(A):
+    mode = PivotMode.BY_ROW
+    lu_in_one, P, P_ = lu_decompose_pivoting(A.astype(np.float), mode)
+    L, U = lu_extract(lu_in_one, P, P_)
+    return perm_vector_to_matrix(P, row=True), L, U
+
+def LUP_decomposition(A):
+    mode = PivotMode.BY_COLUMN
+    lu_in_one, P, P_ = lu_decompose_pivoting(A.astype(np.float), mode)
+    L, U = lu_extract(lu_in_one, P, P_)
+    return L, U, perm_vector_to_matrix(P_, row=False)
+
+def PLUP_decomposition(A):
+    mode = PivotMode.BY_MATRIX
+    lu_in_one, P, P_ = lu_decompose_pivoting(A.astype(np.float), mode)
+    L, U = lu_extract(lu_in_one, P, P_)
+    return perm_vector_to_matrix(P, row=True), L, U, perm_vector_to_matrix(P_, row=False)
+
