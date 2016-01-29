@@ -1,9 +1,11 @@
+import unittest
 import numpy as np
-from task1golubkov import PLU_decomposition, LUP_decomposition, PLUP_decomposition
+from task1 import PLU_decomposition, LUP_decomposition, PLUP_decomposition
+from task1 import lpl_decompose, lpu_decompose
 
 np.seterr(all='raise') # 'raise' / 'print' / 'ignore'
 
-test_matricies = [
+test_matrices = [
 
     np.matrix([
         [7, 3, -1, 2],
@@ -45,40 +47,93 @@ test_matricies = [
         [-8, 8, 1],
     ]),
 
+    np.matrix([
+        [1, 3, 7, 2, 2],
+        [2, 1, 9, 8, 3],
+        [7, 8, 5, 1, 3],
+        [0, 8, 2, 6, 3],
+        [0, 3, 2, 2, 2],
+    ]),
 ]
 
-def test_decompositions():
-    for i in range(0, len(test_matricies)):
-        print("Testing matrix %d" % i)
-        test_matrix = test_matricies[i]
-        try:
-            P, L, U = PLU_decomposition(test_matrix)
-            result = P@L@U
-            equal = np.allclose(test_matrix, result)
+class DecompositionTest(unittest.TestCase):
+    def __init__(self, matrix, matrix_number):
+        super().__init__()
+        self.matrix = matrix
+        self.matrix_number = matrix_number
 
-            if not equal:
-                print("Failed PLU")
+    def __str__(self):
+        return self.__class__.__name__ + ":" + str(self.matrix_number)
 
-            L, U, P = LUP_decomposition(test_matrix)
-            result = L@U@P
-            equal = np.allclose(test_matrix, result)
+class PLU_Test(DecompositionTest):
+    def runTest(self):
+        P, L, U = PLU_decomposition(self.matrix)
+        result = P@L@U
+        equal = np.allclose(self.matrix, result)
+        self.assertTrue(equal)
 
-            if not equal:
-                print("Failed LUP")
+class LUP_Test(DecompositionTest):
+    def runTest(self):
+        L, U, P = LUP_decomposition(self.matrix)
+        result = L@U@P
+        equal = np.allclose(self.matrix, result)
+        self.assertTrue(equal)
 
-            P, L, U, P_ = PLUP_decomposition(test_matrix)
-            result = P @ L @ U @ P_
-            equal = np.allclose(test_matrix, result)
+class PLUP_Test(DecompositionTest):
+    def runTest(self):
+        P, L, U, P_ = PLUP_decomposition(self.matrix)
+        result = P @ L @ U @ P_
+        equal = np.allclose(self.matrix, result)
+        self.assertTrue(equal)
 
-            if not equal:
-                print("Failed PLUP'")
+class LPU_Test(DecompositionTest):
+    def runTest(self):
+        L, P, U = lpu_decompose(self.matrix)
+        result = L @ P @ U
+        equal = np.allclose(self.matrix, result)
+        self.assertTrue(equal)
 
-        except Exception as e:
-            print("Failed with exception on")
-            print(test_matrix)
-            print(e, '\n')
-        finally:
-            pass
+class LPL_Test(DecompositionTest):
+    def runTest(self):
+        L, P, L = lpl_decompose(self.matrix)
+        result = L @ P @ L
+        equal = np.allclose(self.matrix, result)
+        self.assertTrue(equal)
 
-print("Testing decompositions")
-test_decompositions()
+
+def get_random_suite():
+    suite = unittest.TestSuite()
+    test_types = [
+        PLU_Test,
+        LUP_Test,
+        #PLUP_Test,
+        #LPU_Test,
+    ]
+
+    for i in range(0, 1000):
+        matrix = np.random.randint(low=-100, high=100, size=(30,30))
+        tests = [ test(matrix, i) for test in test_types ]
+        suite.addTests(tests)
+
+    return suite
+
+def get_suite():
+    suite = unittest.TestSuite()
+
+    for i in range(0, len(test_matrices)):
+        matrix = test_matrices[i]
+        tests = [
+            PLU_Test(matrix, i),
+            LUP_Test(matrix, i),
+            PLUP_Test(matrix, i),
+            #LPU_Test(matrix.copy(), i),
+            #LPL_Test(matrix, i),    - пока валится LPU, это будет тоже валиться
+        ]
+        suite.addTests(tests)
+
+    return suite
+
+
+if __name__ == '__main__':
+    unittest.TextTestRunner(verbosity=2).run(get_suite())
+

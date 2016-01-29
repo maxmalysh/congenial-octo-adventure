@@ -216,50 +216,7 @@ def lu_extract(LU: np.matrix, row_permutation: List[float], column_permutation: 
 
 
 def demo():
-    test_matrices = [
-
-        np.matrix([
-            [7, 3, -1, 2],
-            [3, 8, 1, -4],
-            [-1, 1, 4, -1],
-            [2, -4, -1, 6],
-        ], dtype=float),
-
-        np.matrix([
-            [0, 1, 0],
-            [-8, 8, 1],
-            [2, -2, 0],
-        ], dtype=float),
-
-        np.matrix([
-            [0, 1, 0],
-            [-8, 8, 1],
-            [2, -2, 0],
-        ], dtype=float),
-
-        # LUP / PLU, p.3: http://www.math.unm.edu/~loring/links/linear_s08/LU.pdf
-        np.matrix([
-            [2, 1, 0, 1],
-            [2, 1, 2, 3],
-            [0, 0, 1, 2],
-            [-4, -1, 0, -2],
-        ], dtype=float),
-
-        # For Bruhat: http://mathpar.com/ru/help/08matrix.html
-        np.matrix([
-            [1, 4, 0, 1],
-            [4, 5, 5, 3],
-            [1, 2, 2, 2],
-            [3, 0, 0, 1],
-        ], dtype=float),
-
-        np.matrix([
-            [0, 2],
-            [1, 4],
-        ], dtype=float)
-
-    ]
-
+    from tests import test_matrices
     A = test_matrices[4]
 
     print(A)
