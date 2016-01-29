@@ -1,5 +1,6 @@
 import unittest
 import numpy as np
+import random
 from task1 import PLU_decomposition, LUP_decomposition, PLUP_decomposition
 from task1 import lpl_decompose, lpu_decompose
 
@@ -56,6 +57,28 @@ test_matrices = [
     ]),
 ]
 
+
+def generate_nonsingular_matrix(n):
+    A = np.identity(n, dtype=float)
+
+    for i in range(0, n):  # Scale randomly
+        A[i, i] *= random.randint(1, 10)
+        A[i, i] *= random.randint(-10, -1)
+
+    # Do += transformations randomly
+    for step in range(n, 3 * n):
+        src_row = random.randint(0, n - 1)
+        dest_row = random.randint(0, n - 1)
+        while src_row == dest_row:
+            dest_row = random.randint(0, n - 1)
+        add_coeffitient = random.randint(-10, 10)
+        for j in range(0, n):
+            A[dest_row, j] += A[src_row, j] * add_coeffitient
+
+    return A
+
+
+
 class DecompositionTest(unittest.TestCase):
     def __init__(self, matrix, matrix_number):
         super().__init__()
@@ -95,8 +118,8 @@ class LPU_Test(DecompositionTest):
 
 class LPL_Test(DecompositionTest):
     def runTest(self):
-        L, P, L = lpl_decompose(self.matrix)
-        result = L @ P @ L
+        L, P, L_ = lpl_decompose(self.matrix)
+        result = L @ P @ L_
         equal = np.allclose(self.matrix, result)
         self.assertTrue(equal)
 
@@ -106,13 +129,27 @@ def get_random_suite():
     test_types = [
         PLU_Test,
         LUP_Test,
-        #PLUP_Test,
-        #LPU_Test,
+        PLUP_Test,
     ]
 
-    for i in range(0, 1000):
+    for i in range(0, 20):
         matrix = np.random.randint(low=-100, high=100, size=(30,30))
         tests = [ test(matrix, i) for test in test_types ]
+        suite.addTests(tests)
+
+    return suite
+
+
+def get_random_nonsingular_suite():
+    suite = unittest.TestSuite()
+    test_types = [
+        LPU_Test,
+        LPL_Test,
+    ]
+
+    for i in range(0, 20):
+        matrix = generate_nonsingular_matrix(n=3)
+        tests = [test(matrix, i) for test in test_types]
         suite.addTests(tests)
 
     return suite
@@ -126,8 +163,8 @@ def get_suite():
             PLU_Test(matrix, i),
             LUP_Test(matrix, i),
             PLUP_Test(matrix, i),
-            #LPU_Test(matrix.copy(), i),
-            #LPL_Test(matrix, i),    - пока валится LPU, это будет тоже валиться
+            LPU_Test(matrix.copy(), i),
+            LPL_Test(matrix, i),
         ]
         suite.addTests(tests)
 
@@ -135,5 +172,5 @@ def get_suite():
 
 
 if __name__ == '__main__':
-    unittest.TextTestRunner(verbosity=2).run(get_suite())
-
+    unittest.TextTestRunner(verbosity=2).run(get_random_suite())
+    unittest.TextTestRunner(verbosity=2).run(get_random_nonsingular_suite())

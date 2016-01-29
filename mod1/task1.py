@@ -46,7 +46,7 @@ def pivot_by_matrix(A: np.matrix, k: int, row_permutation: List[float], column_p
 
     for i in range(k + 1, mat_size):
         for j in range(k + 1, mat_size):
-            if abs(A[row_permutation[i], column_permutation[k]]) > abs(
+            if abs(A[row_permutation[i], column_permutation[j]]) > abs(
                     A[row_permutation[row_with_max_leading_elem], column_permutation[column_with_max_leading_elem]]):
                 row_with_max_leading_elem = i
                 column_with_max_leading_elem = j
@@ -57,7 +57,7 @@ def pivot_by_matrix(A: np.matrix, k: int, row_permutation: List[float], column_p
         row_permutation[row_with_max_leading_elem] = row_perm_k_saved
     if column_with_max_leading_elem != k:
         column_perm_k_saved = column_permutation[k]
-        column_permutation[k] = column_permutation[row_with_max_leading_elem]
+        column_permutation[k] = column_permutation[column_with_max_leading_elem]
         column_permutation[column_with_max_leading_elem] = column_perm_k_saved
 
 
@@ -111,7 +111,7 @@ def lu_decompose_pivoting(A: np.matrix, mode: PivotMode):
 
 
 '''
-LPU decomposition (modified Bruhat decomposition):
+LPU decomposition (modified Bruhat decomposition) for nonsingular matrix:
 
 where
 L is lower triangular,
@@ -131,8 +131,14 @@ def lpu_decompose(A: np.matrix) -> (np.matrix, np.matrix, np.matrix):
 
     # The algorithm: LecV.pdf p. 27.
     for k in range(0, n):  # k - Gaussian step number
-        first_nonzero_elem_j = np.where(A[k] != 0)[1][
-            0]  # Get tuple: (nonzero elements of row A[k], their indices). Get indices, get first index.
+        nonzero_elems_j_indices = np.nonzero(A[k])[0]  # Returns a tuple of arrays, one for each dimension of a,
+        # containing the indices of the non-zero elements in that dimension. Get indices in dimension 0.
+
+        if len(nonzero_elems_j_indices) != 0:
+            first_nonzero_elem_j = nonzero_elems_j_indices[0]  # Get first index.
+        else:
+            raise ValueError("Singular matrix provided. LPU only works for nonsingular matrices.")
+
         first_nonzero_elem = A[k, first_nonzero_elem_j]
 
         # L, U start as identity matrices.
@@ -171,7 +177,7 @@ def lpu_decompose(A: np.matrix) -> (np.matrix, np.matrix, np.matrix):
 
 
 '''
-LPL' decomposition (Bruhat decomposition):
+LPL' decomposition (Bruhat decomposition) for nonsingular matrix:
 
 where
 L is lower triangular,
