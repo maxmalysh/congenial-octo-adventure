@@ -124,7 +124,7 @@ P is transposition matrix.
 
 
 def lpu_decompose(A: np.matrix) -> (np.matrix, np.matrix, np.matrix):
-    A = A.copy()
+    A = A.astype(np.float)
     n = A.shape[0]
     L = np.identity(A.shape[0])
     U = np.identity(A.shape[0])
@@ -187,6 +187,7 @@ P is transposition matrix.
 
 
 def lpl_decompose(A: np.matrix) -> (np.matrix, np.matrix, np.matrix):
+    A = A.astype(np.float)
     # LecV.pdf p. 27
     Q = np.identity(A.shape[0])
     Q = Q[::-1]

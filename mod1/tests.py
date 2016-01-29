@@ -58,27 +58,6 @@ test_matrices = [
 ]
 
 
-def generate_nonsingular_matrix(n):
-    A = np.identity(n, dtype=float)
-
-    for i in range(0, n):  # Scale randomly
-        A[i, i] *= random.randint(1, 10)
-        A[i, i] *= random.randint(-10, -1)
-
-    # Do += transformations randomly
-    for step in range(n, 3 * n):
-        src_row = random.randint(0, n - 1)
-        dest_row = random.randint(0, n - 1)
-        while src_row == dest_row:
-            dest_row = random.randint(0, n - 1)
-        add_coeffitient = random.randint(-10, 10)
-        for j in range(0, n):
-            A[dest_row, j] += A[src_row, j] * add_coeffitient
-
-    return A
-
-
-
 class DecompositionTest(unittest.TestCase):
     def __init__(self, matrix, matrix_number):
         super().__init__()
@@ -147,8 +126,14 @@ def get_random_nonsingular_suite():
         LPL_Test,
     ]
 
-    for i in range(0, 20):
-        matrix = generate_nonsingular_matrix(n=3)
+    for i in range(0, 100):
+        singular = True
+
+        while singular:
+            matrix = np.random.randint(low=-100, high=100, size=(50,50))
+            if np.linalg.det(matrix) != 0:
+                singular = False
+
         tests = [test(matrix, i) for test in test_types]
         suite.addTests(tests)
 
