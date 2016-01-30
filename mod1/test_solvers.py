@@ -1,6 +1,7 @@
 import unittest
 import numpy as np
 from scipy.linalg import solve as npsolve
+from task2 import plup_solve
 from task3 import plu_solve
 
 class NumberedTest(unittest.TestCase):
@@ -22,10 +23,17 @@ class SolverTest(NumberedTest):
         return self.__class__.__name__ + ":" + str(self.test_number)
 
 
-class Task3Test(SolverTest):
+class PLU_SolverTest(SolverTest):
     def runTest(self):
         trueResult = npsolve(self.matrix, self.vector)
         ourResult = plu_solve(self.matrix, self.vector)
+        equal = np.allclose(ourResult, trueResult)
+        self.assertTrue(equal, msg="Failed on \nA:\n{0},\nb:\n{1}".format(self.matrix, self.vector))
+
+class PLUP_SolverTest(SolverTest):
+    def runTest(self):
+        trueResult = npsolve(self.matrix, self.vector)
+        ourResult = plup_solve(self.matrix, self.vector)
         equal = np.allclose(ourResult, trueResult)
         self.assertTrue(equal, msg="Failed on \nA:\n{0},\nb:\n{1}".format(self.matrix, self.vector))
 
@@ -33,7 +41,8 @@ class Task3Test(SolverTest):
 def get_random_suite():
     suite = unittest.TestSuite()
     test_types = [
-        Task3Test,
+        PLU_SolverTest,
+        PLUP_SolverTest,
     ]
 
     msize = 30
