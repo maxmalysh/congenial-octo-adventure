@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 from scipy.linalg import solve as npsolve
-from task2 import plup_solve
+from task2 import plup_solve, plup_solve_iterative, solution_deviation
 from task3 import plu_solve
 
 class NumberedTest(unittest.TestCase):
@@ -37,12 +37,22 @@ class PLUP_SolverTest(SolverTest):
         equal = np.allclose(ourResult, trueResult)
         self.assertTrue(equal, msg="Failed on \nA:\n{0},\nb:\n{1}".format(self.matrix, self.vector))
 
+class PLUP_Iterative_SolverTest(SolverTest):
+    def runTest(self):
+        baseResult = plup_solve(self.matrix, self.vector)
+        improvedResult = plup_solve_iterative(self.matrix, self.vector)
+
+        baseDeviation = solution_deviation(self.matrix, baseResult, self.vector)
+        improvedDeviation = solution_deviation(self.matrix, improvedResult, self.vector)
+
+        self.assertTrue(improvedDeviation <= baseDeviation)
 
 def get_random_suite():
     suite = unittest.TestSuite()
     test_types = [
         PLU_SolverTest,
         PLUP_SolverTest,
+        PLUP_Iterative_SolverTest,
     ]
 
     msize = 30

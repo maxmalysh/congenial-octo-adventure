@@ -3,7 +3,7 @@
 #    построением соответсвующего этому методу разложения матрицы системы A вида A=PLUP'; - DONE
 # 2) при реализации учесь формат хранения A;
 # 3) реализовать для этого метода итерационное уточнение простой и переменной точности,
-#    оценить качество получаемых результатов;
+#    оценить качество получаемых результатов; - DONE
 '''
 
 
@@ -50,7 +50,32 @@ def plup_solve(A: np.matrix, b: np.array) -> np.array:
 
     return x
 
+
+# Итерационное уточнение - стр. 34, два пункта сверху
+# Iterative refinement
+def plup_solve_iterative(A: np.matrix, b: np.array) -> np.array:
+    x = plup_solve(A, b)
+
+    iteration_count = 2
+
+    for i in range(0, iteration_count):
+        r = b - A.dot(x)
+        z = plup_solve(A, r)
+        x = x + z
+
+    return x
+
+# Average solution deviation (absolute) for system Ax=b
+def solution_deviation(A:np.matrix, x:np.array, b:np.array):
+    differences = b - A.dot(x)
+    return np.mean( [abs(err) for err in differences] )
+
+
 if __name__ == '__main__':
+    #
+    # Checking whether solver works
+    #
+
     A = test_matrix
     b = test_vector
 
@@ -59,3 +84,26 @@ if __name__ == '__main__':
     print(
         np.allclose(plup_solve(A,b), npsolve(A, b))
     )
+
+    #
+    # Checking whether iterative solver works better
+    #
+    msize = 100
+
+    singular = True
+
+    while singular:
+        matrix = np.random.randint(low=-100, high=100, size=(msize, msize))
+        if np.linalg.det(matrix) != 0:
+            singular = False
+
+    vector = np.random.randint(low=-100, high=100, size=msize)
+
+    numpyResult = npsolve(matrix.astype(np.float64), vector.astype(np.float64))
+    ourResult = plup_solve(matrix, vector)
+    ourBetterResult = plup_solve_iterative(matrix, vector)
+
+    print(solution_deviation(matrix, numpyResult, vector))
+    print(solution_deviation(matrix, ourResult, vector))
+    print(solution_deviation(matrix, ourBetterResult, vector))
+
