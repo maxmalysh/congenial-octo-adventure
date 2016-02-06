@@ -26,8 +26,8 @@ test_vector = np.array([
 
 
 def plup_solve(A: np.matrix, b: np.array) -> np.array:
-    A = A.astype(np.float32)
-    b = b.astype(np.float32)
+    A = A.astype(np.float)
+    b = b.astype(np.float)
 
     P,L,U,P_ = PLUP_decomposition(A)
     Pb = P.transpose().dot(b)
