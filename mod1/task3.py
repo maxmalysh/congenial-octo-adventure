@@ -40,20 +40,23 @@ test_vector = np.array([
     # 1, 2, 3,
 ])
 
+
 def max_row_norm(A):
     if len(A.shape) == 1:
-        return max([ abs(x) for x in A ])
+        return max([abs(x) for x in A])
 
-    m, n = A.shape[0], A.shape[1]   # m строк, n столбцов
+    m, n = A.shape[0], A.shape[1]  # m строк, n столбцов
 
     absolute_sums = [
-        sum([ abs(A[i, j]) for j in range(0, n)]) for i in range(0, m)
-    ]
+        sum([abs(A[i, j]) for j in range(0, n)]) for i in range(0, m)
+        ]
 
     return max(absolute_sums)
 
-#norm = max_row_norm
+
+# norm = max_row_norm
 norm = lambda A: np.linalg.norm(A, ord=np.inf)
+
 
 def condition_number_for(A):
     return norm(A) * norm(np.linalg.inv(A))
@@ -66,7 +69,7 @@ def plu_solve(A: np.matrix, b: np.array) -> np.array:
     A = A.astype(np.float)
     b = b.astype(np.float)
 
-    P,L,R = PLR_decomposition(A)
+    P, L, R = PLR_decomposition(A)
     Pb = P.transpose().dot(b)
 
     y = np.zeros(b.size)
@@ -79,7 +82,7 @@ def plu_solve(A: np.matrix, b: np.array) -> np.array:
     x = np.zeros(b.size)
     for k in reversed(range(0, b.size)):
         x[k] = y[k] - sum(
-            R[k][i] * x[i] for i in range(k+1, b.size)
+                R[k][i] * x[i] for i in range(k + 1, b.size)
         )
         x[k] /= R[k][k]
 
@@ -91,7 +94,7 @@ def plu_solve(A: np.matrix, b: np.array) -> np.array:
     # Each element e_{i} is +/- 1
 
 
-    #return x
+    # return x
 
     # Step 1:
     xhat, yhat = x, y
@@ -113,14 +116,14 @@ def cn_estimator(A: np.matrix, b: np.array):
     A = A.astype(np.float)
     b = b.astype(np.float)
 
-    P,L,R = PLR_decomposition(A)
+    P, L, R = PLR_decomposition(A)
     Pb = P.transpose().dot(b)
 
     # Forward substitution
     y = np.zeros(b.size)
     for m in range(0, b.size):
         y[m] = Pb[m] - sum(
-            L[m][i] * y[i] for i in range(0, m)
+                L[m][i] * y[i] for i in range(0, m)
         )
         y[m] /= L[m][m]
 
@@ -133,23 +136,23 @@ def cn_estimator(A: np.matrix, b: np.array):
 
     for k in reversed(range(0, b.size)):
         x[k] = y[k] - sum(
-            R[k][i] * x[i] for i in range(k+1, b.size)
+                R[k][i] * x[i] for i in range(k + 1, b.size)
         )
         x[k] /= R[k][k]
 
-        p[k] = sum( R[k][i] * x[i] for i in range(k+1, b.size) )
-#        p[0:k] = pl(k) + x[k]*tk(k)
+        p[k] = sum(R[k][i] * x[i] for i in range(k + 1, b.size))
+        #        p[0:k] = pl(k) + x[k]*tk(k)
 
-        tk = lambda n: np.array([ R[k][i] for i in range(0, n+1) ])
-        pl = lambda n: np.array([ p[i]    for i in range(0, n+1) ])
+        tk = lambda n: np.array([R[k][i] for i in range(0, n + 1)])
+        pl = lambda n: np.array([p[i] for i in range(0, n + 1)])
 
-        yhat[k] = 0.0 # ...
+        yhat[k] = 0.0  # ...
 
-        xkp  = (1 - p[k])  / R[k][k]
-        xkm  = (-1 - p[k]) / R[k][k]
+        xkp = (1 - p[k]) / R[k][k]
+        xkm = (-1 - p[k]) / R[k][k]
 
-        skp  = abs(xkp) + norm( pl(k) + xkp * tk(k) )
-        skm  = abs(xkm) + norm( pl(k) + xkm * tk(k) )
+        skp = abs(xkp) + norm(pl(k) + xkp * tk(k))
+        skm = abs(xkm) + norm(pl(k) + xkm * tk(k))
 
         xhat[k] = xkp if skp >= skm else xkm
 
@@ -170,7 +173,7 @@ if __name__ == '__main__':
     b = test_vector
 
     print(npsolve(A, b))
-    print(plu_solve(A,b))
+    print(plu_solve(A, b))
     print(cn_estimator(A,b))
 
     print(condition_number_for(A))
