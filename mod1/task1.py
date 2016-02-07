@@ -221,10 +221,51 @@ def lu_extract(LU: np.matrix, row_permutation: List[float], column_permutation: 
                 U[i, j] = 1
     return L, U
 
+def lr_decompose_pivoting(A: np.matrix, mode: PivotMode):
+    n = A.shape[0]
+    row_perm = [i for i in range(n)]  # Row permutation. Identity permutation at first.
+    column_perm = [i for i in range(n)]  # And column permutation.
+
+    # On this kij decomposition and others:
+    # http://www-users.cselabs.umn.edu/classes/Spring-2014/csci8314/FILES/LecN6.pdf p. 6
+    for k in range(0, n): # k - Gaussian step number
+        pivot(A, k, mode, row_perm, column_perm)
+        for i in range(k+1, n): # i - row that we will subtract from
+            # Here we look at submatrix that corresponds to k-th Gaussian step.
+            # In Gauss method, we would zero first element of each row below first one.
+            # But here we store divider as first element of respective row, instead:
+            divider = A[row_perm[i], column_perm[k]] / A[row_perm[k], column_perm[k]]
+            A[row_perm[i], column_perm[k]] = divider
+            # And the rest of elements in the row is subtracted from as usual:
+            for j in range(k+1, n):
+                A[row_perm[i], column_perm[j]] -= A[row_perm[k], column_perm[j]] * divider
+    # Now in A we have these elements:
+    # diagonal and above diagonal: result of usual Gaussian method,
+    # below diagonal: all the dividers for each Gaussian step.
+    # So we actually have complete information about all elementary
+    # transformations we performed: dividers and row swaps that are stored in p.
+    return A, row_perm, column_perm
+
+
+def lr_extract(LU: np.matrix, row_permutation: List[float], column_permutation: List[float]):
+    mat_size = LU.shape[0]
+    L = np.zeros((mat_size, mat_size))
+    U = np.zeros((mat_size, mat_size))
+
+    for i in range(mat_size):
+        for j in range(mat_size):
+            if j > i:
+                U[i, j] = LU[row_permutation[i], column_permutation[j]]
+            elif j < i:
+                L[i, j] = LU[row_permutation[i], column_permutation[j]]
+            elif j == i:
+                U[i, j] = LU[row_permutation[i], column_permutation[j]]
+                L[i, j] = 1
+    return L, U
 
 def demo():
     from tests import test_matrices
-    A = test_matrices[4]
+    A = test_matrices[4].astype(np.float)
 
     print(A)
     print()
@@ -273,4 +314,10 @@ def PLUP_decomposition(A):
     lu_in_one, P, P_ = lu_decompose_pivoting(A.astype(np.float), mode)
     L, U = lu_extract(lu_in_one, P, P_)
     return perm_vector_to_matrix(P, row=True), L, U, perm_vector_to_matrix(P_, row=False)
+
+def PLR_decomposition(A):
+    mode = PivotMode.BY_ROW
+    lr_in_one, P, P_ = lr_decompose_pivoting(A.astype(np.float), mode)
+    L, R = lr_extract(lr_in_one, P, P_)
+    return perm_vector_to_matrix(P, row=True), L, R
 
