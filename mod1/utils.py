@@ -6,11 +6,11 @@ def get_random_matrix(n):
     matrix = np.random.randint(low=-100, high=100, size=(30,30))
     return matrix.astype(np.float)
 
-def get_nonsingular_matrix(n):
+def get_nonsingular_matrix(n, low=-100, high=100):
     singular = True
 
     while singular:
-        matrix = np.random.randint(low=-100, high=100, size=(n, n))
+        matrix = np.random.randint(low=low, high=high, size=(n, n)).astype(np.float)
         if np.linalg.det(matrix) != 0:
             singular = False
 
@@ -30,7 +30,7 @@ def get_arrow_matrix(n):
         if np.linalg.det(matrix.todense()) != 0:
             singular = False
 
-    return matrix
+    return matrix.astype(np.float)
 
 def get_random_sparse_matrix(n):
     singular = True
@@ -42,7 +42,7 @@ def get_random_sparse_matrix(n):
         if np.linalg.det(matrix.todense()) != 0:
             singular = False
 
-    return matrix
+    return matrix.astype(np.float)
 
 
 test_matrices = [

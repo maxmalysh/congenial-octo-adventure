@@ -1,7 +1,9 @@
 import unittest
 import numpy as np
 from scipy.linalg import solve as npsolve
-from task2 import plup_solve, plup_solve_iterative, solution_deviation
+
+import utils
+from task2 import plup_solve, iterative_refinement, solution_deviation
 from task3 import plu_solve
 
 class NumberedTest(unittest.TestCase):
@@ -40,7 +42,7 @@ class PLUP_SolverTest(SolverTest):
 class PLUP_Iterative_SolverTest(SolverTest):
     def runTest(self):
         baseResult = plup_solve(self.matrix, self.vector)
-        improvedResult = plup_solve_iterative(self.matrix, self.vector)
+        improvedResult = iterative_refinement(self.matrix, self.vector, solver=plup_solve)
 
         baseDeviation = solution_deviation(self.matrix, baseResult, self.vector)
         improvedDeviation = solution_deviation(self.matrix, improvedResult, self.vector)
@@ -50,20 +52,14 @@ class PLUP_Iterative_SolverTest(SolverTest):
 def get_random_suite():
     suite = unittest.TestSuite()
     test_types = [
-        PLU_SolverTest,
+    #    PLU_SolverTest,
         PLUP_SolverTest,
         PLUP_Iterative_SolverTest,
     ]
 
     msize = 30
     for i in range(0, 250):
-        singular = True
-
-        while singular:
-            matrix = np.random.randint(low=-100, high=100, size=(msize, msize))
-            if np.linalg.det(matrix) != 0:
-                singular = False
-
+        matrix = utils.get_nonsingular_matrix(msize)
         vector = np.random.randint(low=-100, high=100, size=msize)
         tests = [test(matrix, vector) for test in test_types]
         suite.addTests(tests)
