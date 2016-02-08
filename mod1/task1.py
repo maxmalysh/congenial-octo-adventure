@@ -89,7 +89,10 @@ def pivot_sparse(A: sparse.dok_matrix, k: int, row_permutation: List[float], col
 
     # Calculate B and B_
     # An optimization. We only iterate over non-zero A elements (and skip those out of bounds of gaussian submatrix).
-    for i_permuted, j_permuted in A.keys():  # Warning! These indices are already permuted. We have to unpermute them.
+    A_keys = A.keys() if isinstance(A, sparse.spmatrix) else [
+        x for x in np.ndindex(A.shape) if A[x] != 0
+    ]
+    for i_permuted, j_permuted in A_keys: # Warning! These indices are already permuted. We have to unpermute them.
         # Find unpermuted indices, subtract k to convert to B or B_ indices. Corresponding A indices are i+k, j+k.
         i = row_permutation_reverse[i_permuted] - k
         j = column_permutation_reverse[j_permuted] - k
@@ -114,7 +117,10 @@ def pivot_sparse(A: sparse.dok_matrix, k: int, row_permutation: List[float], col
     g_min_elem_indices = []  # Indices of minimal elements of G.
 
     # An optimization. We only iterate over non-zero A elements (and skip those out of bounds of gaussian submatrix).
-    for i_permuted, j_permuted in A.keys():  # Warning! These indices are already permuted. We have to unpermute them.
+    A_keys = A.keys() if isinstance(A, sparse.spmatrix) else [
+        x for x in np.ndindex(A.shape) if A[x] != 0
+    ]
+    for i_permuted, j_permuted in A_keys:  # Warning! These indices are already permuted. We have to unpermute them.
         # Find unpermuted indices, subtract k to convert to G indices. Corresponding A indices are i+k, j+k.
         i = row_permutation_reverse[i_permuted] - k
         j = column_permutation_reverse[j_permuted] - k
