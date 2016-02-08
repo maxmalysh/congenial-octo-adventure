@@ -2,47 +2,63 @@ import numpy as np
 import random
 from scipy import sparse
 
-def get_random_matrix(n):
-    matrix = np.random.randint(low=-100, high=100, size=(30,30))
-    return matrix.astype(np.float)
+default_type = np.float
 
-def get_nonsingular_matrix(n, low=-100, high=100):
-    singular = True
+def get_random_vector(n, low=-100, high=100):
+    vector = np.random.randint(low=low, high=high, size=n)
+    return vector.astype(default_type)
 
-    while singular:
-        matrix = np.random.randint(low=low, high=high, size=(n, n)).astype(np.float)
-        if np.linalg.det(matrix) != 0:
-            singular = False
+class MatrixBuilder:
+    def __init__(self, size, low=-100, high=100, dtype=default_type):
+        self.matrix = np.zeros((size, size), dtype=dtype)
+        self.size = size
+        self.low = low
+        self.high = high
+        self.fill_element = lambda: np.random.randint(low=low, high=high)
+        self.fill_matrix = self._get_default_filler()
 
-    return matrix.astype(np.float)
+    def nonsingular(self):
+        self.nonsingular = True
+        return self
 
-def get_arrow_matrix(n):
-    singular = True
+    def dok(self):
+        self.matrix = sparse.dok_matrix(self.matrix)
+        return self
 
-    while singular:
-        matrix = sparse.dok_matrix((n, n), dtype=np.float)
+    def arrow(self):
+        def filler():
+            for i in range(0, self.size):
+                self.matrix[0, i] = self.fill_element()
+                self.matrix[i, 0] = self.fill_element()
+                self.matrix[i, i] = self.fill_element()
+        self.fill_matrix = filler
+        return self
 
-        for i in range(0, n):
-            matrix[0, i] = random.randint(-100, 100)
-            matrix[i, 0] = random.randint(-100, 100)
-            matrix[i, i] = random.randint(-100, 100)
+    def randsparse(self):
+        def filler():
+            for rand_iterations in range(0, int((self.size ** 2) / 4)):
+                i, j = random.randint(0, self.size - 1), random.randint(0, self.size - 1)
+                self.matrix[i, j] = random.randint(-100, 100)
+        self.fill_matrix = filler
+        return self
 
-        if np.linalg.det(matrix.todense()) != 0:
-            singular = False
+    def _get_default_filler(self):
+        def filler():
+            for i in range(0, self.size):
+                for j in range(0, self.size):
+                    self.matrix[i, j] = self.fill_element()
+        return filler
 
-    return matrix.astype(np.float)
+    def _singular(self):
+        if isinstance(self.matrix, sparse.base.spmatrix):
+            return np.linalg.det(self.matrix.todense()) == 0
+        return np.linalg.det(self.matrix) == 0
 
-def get_random_sparse_matrix(n):
-    singular = True
-
-    while singular:
-        matrix = sparse.dok_matrix((n, n), dtype=np.float)
-        for rand_iterations in range(0, int((n ** 2) / 4)):
-            matrix[random.randint(0, n - 1), random.randint(0, n - 1)] = random.randint(-100, 100)
-        if np.linalg.det(matrix.todense()) != 0:
-            singular = False
-
-    return matrix.astype(np.float)
+    def gen(self):
+        if self.nonsingular:
+            while self._singular():
+                self.fill_matrix()
+        return self.matrix
 
 
 test_matrices = [
@@ -52,13 +68,13 @@ test_matrices = [
         [3, 8, 1, -4],
         [-1, 1, 4, -1],
         [2, -4, -1, 6],
-    ]),
+    ], dtype=default_type),
 
     np.matrix([
         [0,  1, 0],
         [-8, 8, 1],
         [2, -2, 0],
-    ]),
+    ],  dtype=default_type),
 
     # LUP / PLU, p.3: http://www.math.unm.edu/~loring/links/linear_s08/LU.pdf
     np.matrix([
@@ -66,7 +82,7 @@ test_matrices = [
         [2, 1, 2, 3],
         [0, 0, 1, 2],
         [-4, -1, 0, -2],
-    ]),
+    ],  dtype=default_type),
 
     # Для Брюа: http://mathpar.com/ru/help/08matrix.html
     np.matrix([
@@ -74,18 +90,18 @@ test_matrices = [
         [4, 5, 5, 3],
         [1, 2, 2, 2],
         [3, 0, 0, 1],
-    ]),
+    ],  dtype=default_type),
 
     np.matrix([
         [0, 2],
         [1, 4],
-    ]),
+    ],  dtype=default_type),
 
     np.matrix([
         [2, -2, 0],
         [0,  1, 0],
         [-8, 8, 1],
-    ]),
+    ],  dtype=default_type),
 
     np.matrix([
         [1, 3, 7, 2, 2],
@@ -93,7 +109,7 @@ test_matrices = [
         [7, 8, 5, 1, 3],
         [0, 8, 2, 6, 3],
         [0, 3, 2, 2, 2],
-    ]),
+    ],  dtype=default_type),
 
     np.matrix([
         [0, 0, 0, 0, 1],
@@ -101,5 +117,5 @@ test_matrices = [
         [0, 1, 0, 0, 0],
         [1, 0, 0, 0, 0],
         [0, 0, 1, 0, 0],
-    ])
+    ],  dtype=default_type),
 ]

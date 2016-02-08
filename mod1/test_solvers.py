@@ -2,7 +2,7 @@ import unittest
 import numpy as np
 from scipy.linalg import solve as npsolve
 
-import utils
+from utils import MatrixBuilder
 from task2 import plup_solve, iterative_refinement, solution_deviation
 from task3 import plu_solve
 
@@ -59,7 +59,7 @@ def get_random_suite():
 
     msize = 30
     for i in range(0, 250):
-        matrix = utils.get_nonsingular_matrix(msize)
+        matrix = MatrixBuilder(msize).nonsingular().gen()
         vector = np.random.randint(low=-100, high=100, size=msize)
         tests = [test(matrix, vector) for test in test_types]
         suite.addTests(tests)

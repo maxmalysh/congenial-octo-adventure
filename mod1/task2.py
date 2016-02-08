@@ -10,6 +10,7 @@ import numpy as np
 from scipy.linalg import solve as npsolve
 
 import utils
+from utils import MatrixBuilder
 from task1 import PLUP_decomposition, Sparse_decomposition
 
 test_matrix = np.matrix([
@@ -61,7 +62,7 @@ def iterative_refinement(A: np.matrix, b: np.array, solver, iterations=2, double
     for i in range(0, iterations):
         chosen_type = np.longfloat if double_precision else A.dtype
         r = b.astype(chosen_type) - A.astype(chosen_type).dot(x).astype(chosen_type)
-        z = solver(A, r)
+        z = solver(A, r.astype(A.dtype))
         x = x + z
 
     return x
@@ -79,12 +80,12 @@ def solution_deviation(A:np.matrix, x:np.array, b:np.array):
 # Generates non-singular equation system in form Ax=b,
 #
 def generate_test_system(size=100, sparse=False):
-    vector = np.random.randint(low=-100000, high=100000, size=size).astype(np.float64)
+    vector = utils.get_random_vector(size, low=-100000, high=100000)
 
     if not sparse:
-        matrix = utils.get_nonsingular_matrix(size, low=-100000, high=100000)
+        matrix = MatrixBuilder(size, low=-100000, high=100000).nonsingular().gen()
     else:
-        matrix = utils.get_arrow_matrix(size)
+        matrix = MatrixBuilder(size).nonsingular().dok().arrow().gen()
 
     return matrix, vector
 

@@ -66,9 +66,6 @@ def condition_number_for(A):
 # Third, we solve the equation Ux=y for x
 # https://en.wikipedia.org/wiki/Triangular_matrix#Forward_and_back_substitution
 def plu_solve(A: np.matrix, b: np.array) -> np.array:
-    A = A.astype(np.float)
-    b = b.astype(np.float)
-
     P, L, R = PLR_decomposition(A)
     Pb = P.transpose().dot(b)
 
@@ -113,9 +110,6 @@ def plu_solve(A: np.matrix, b: np.array) -> np.array:
 # Оценщик числа обусловленности - condition number estimator
 #
 def cn_estimator(A: np.matrix, b: np.array):
-    A = A.astype(np.float)
-    b = b.astype(np.float)
-
     P, L, R = PLR_decomposition(A)
     Pb = P.transpose().dot(b)
 

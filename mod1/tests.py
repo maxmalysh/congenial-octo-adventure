@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-import utils
+from utils import MatrixBuilder
 from task1 import PLU_decomposition, LUP_decomposition, PLUP_decomposition, Sparse_decomposition
 from task1 import lpl_decompose, lpu_decompose
 from utils import test_matrices
@@ -62,7 +62,7 @@ class Sparse_Test(DecompositionTest):
         self.assertTrue(equal)
 
 
-def get_random_suite():
+def get_random_suite(test_number=50, msize=50):
     suite = unittest.TestSuite()
     test_types = [
         PLU_Test,
@@ -70,33 +70,33 @@ def get_random_suite():
         PLUP_Test,
     ]
 
-    for i in range(0, 100):
-        matrix = utils.get_random_matrix(50)
+    for i in range(0, test_number):
+        matrix = MatrixBuilder(msize).gen()
         tests = [ test(matrix, i) for test in test_types ]
         suite.addTests(tests)
 
     return suite
 
-def get_random_nonsingular_suite():
+def get_random_nonsingular_suite(test_number=50, msize=50):
     suite = unittest.TestSuite()
     test_types = [
         LPU_Test,
         LPL_Test,
     ]
 
-    for i in range(0, 100):
-        matrix = utils.get_nonsingular_matrix(50)
+    for i in range(0, test_number):
+        matrix = MatrixBuilder(msize).nonsingular().gen()
         tests = [test(matrix, i) for test in test_types]
         suite.addTests(tests)
 
     return suite
 
-def get_random_sparse_nonsingular_suite():
+def get_random_sparse_nonsingular_suite(test_number=10, msize=15):
     suite = unittest.TestSuite()
 
-    for i in range(0, 10):
-        matrix = utils.get_random_sparse_matrix(15)
-        tests = [Sparse_Test(matrix, i)]  # PLUP_Test(matrix.todense(), i),
+    for i in range(0, test_number):
+        matrix = MatrixBuilder(msize).nonsingular().dok().randsparse().gen()
+        tests = [Sparse_Test(matrix, i)]
         suite.addTests(tests)
 
     return suite
@@ -110,8 +110,6 @@ def get_suite():
             PLU_Test(matrix, i),
             LUP_Test(matrix, i),
             PLUP_Test(matrix, i),
-            LPU_Test(matrix, i),
-            LPL_Test(matrix, i),
         ]
         suite.addTests(tests)
 
@@ -119,6 +117,11 @@ def get_suite():
 
 
 if __name__ == '__main__':
-    # unittest.TextTestRunner(verbosity=2).run(get_random_suite())
-    # unittest.TextTestRunner(verbosity=2).run(get_random_nonsingular_suite())
-    unittest.TextTestRunner(verbosity=2).run(get_random_sparse_nonsingular_suite())
+    combo_suite = unittest.TestSuite([
+        # get_suite(),
+        # get_random_suite(),
+        # get_random_nonsingular_suite(),
+        # get_random_sparse_nonsingular_suite(),
+        get_random_sparse_nonsingular_suite(test_number=3000, msize=3),
+    ])
+    unittest.TextTestRunner(verbosity=2).run(combo_suite)

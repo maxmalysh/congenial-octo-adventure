@@ -220,7 +220,7 @@ P is transposition matrix.
 '''
 
 def lpu_decompose(A: np.matrix) -> (np.matrix, np.matrix, np.matrix):
-    A = A.astype(np.float)
+    A = A.copy()
     n = A.shape[0]
     L = np.identity(A.shape[0])
     U = np.identity(A.shape[0])
@@ -399,33 +399,31 @@ if __name__ == "__main__":
 
 def PLU_decomposition(A):
     mode = PivotMode.BY_ROW
-    lu_in_one, P, P_ = lu_decompose_pivoting(A.astype(np.float), mode)
+    lu_in_one, P, P_ = lu_decompose_pivoting(A.copy(), mode)
     L, U = lu_extract(lu_in_one, P, P_)
     return perm_vector_to_matrix(P, row=True), L, U
 
 def LUP_decomposition(A):
     mode = PivotMode.BY_COLUMN
-    lu_in_one, P, P_ = lu_decompose_pivoting(A.astype(np.float), mode)
+    lu_in_one, P, P_ = lu_decompose_pivoting(A.copy(), mode)
     L, U = lu_extract(lu_in_one, P, P_)
     return L, U, perm_vector_to_matrix(P_, row=False)
 
 def PLUP_decomposition(A):
     mode = PivotMode.BY_MATRIX
-    lu_in_one, P, P_ = lu_decompose_pivoting(A.astype(np.float), mode)
+    lu_in_one, P, P_ = lu_decompose_pivoting(A.copy(), mode)
     L, U = lu_extract(lu_in_one, P, P_)
     return perm_vector_to_matrix(P, row=True), L, U, perm_vector_to_matrix(P_, row=False)
 
-
 def PLR_decomposition(A):
     mode = PivotMode.BY_ROW
-    lr_in_one, P, P_ = lr_decompose_pivoting(A.astype(np.float), mode)
+    lr_in_one, P, P_ = lr_decompose_pivoting(A.copy(), mode)
     L, R = lr_extract(lr_in_one, P, P_)
     return perm_vector_to_matrix(P, row=True), L, R
 
-
 def Sparse_decomposition(A):
     mode = PivotMode.SPARSE
-    lu_in_one, P, P_ = lu_decompose_pivoting(A.astype(np.float), mode)
+    lu_in_one, P, P_ = lu_decompose_pivoting(A.copy(), mode)
     L, U = lu_extract(lu_in_one, P, P_)
     return perm_vector_to_matrix(P, row=True), L, U, perm_vector_to_matrix(P_, row=False)
 
