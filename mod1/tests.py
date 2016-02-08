@@ -158,6 +158,21 @@ def get_random_nonsingular_suite():
 
     return suite
 
+def get_arrow_matrix(n):
+    singular = True
+
+    while singular:
+        matrix = sparse.dok_matrix((n, n), dtype=np.float)
+
+        for i in range(0, n):
+            matrix[0, i] = random.randint(-100, 100)
+            matrix[i, 0] = random.randint(-100, 100)
+            matrix[i, i] = random.randint(-100, 100)
+
+        if np.linalg.det(matrix.todense()) != 0:
+            singular = False
+
+    return matrix
 
 def get_random_sparse_nonsingular_suite():
     suite = unittest.TestSuite()
