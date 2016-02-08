@@ -220,7 +220,7 @@ P is transposition matrix.
 '''
 
 def lpu_decompose(A: np.matrix) -> (np.matrix, np.matrix, np.matrix):
-    A = A.copy()
+    A = A.astype(np.float)
     n = A.shape[0]
     L = np.identity(A.shape[0])
     U = np.identity(A.shape[0])
@@ -378,7 +378,7 @@ def perm_vector_to_matrix(vector, row=True):
 
 
 def demo():
-    from tests import test_matrices
+    from utils import test_matrices
     A = sparse.dok_matrix(test_matrices[7].astype(np.float))
 
     print(A.todense())
@@ -425,7 +425,7 @@ def PLR_decomposition(A):
 
 def Sparse_decomposition(A):
     mode = PivotMode.SPARSE
-    lu_in_one, P, P_ = lu_decompose_pivoting(A.copy(), mode)
+    lu_in_one, P, P_ = lu_decompose_pivoting(A.astype(np.float), mode)
     L, U = lu_extract(lu_in_one, P, P_)
     return perm_vector_to_matrix(P, row=True), L, U, perm_vector_to_matrix(P_, row=False)
 
