@@ -38,7 +38,24 @@ class MatrixBuilder:
         def filler():
             for rand_iterations in range(0, int((self.size ** 2) / 4)):
                 i, j = random.randint(0, self.size - 1), random.randint(0, self.size - 1)
-                self.matrix[i, j] = random.randint(-100, 100)
+                self.matrix[i, j] = random.randint(self.low, self.high)
+        self.fill_matrix = filler
+        return self
+
+    def nearsingular(self, el_n=None):
+        if el_n == None:
+            el_n = self.size
+
+        def filler():
+            mult = np.finfo(default_type).eps * 1000.0
+
+            for i in range(0, self.size):
+                self.matrix[i, i] = random.randint(-self.low, self.high)
+
+            for n in range(0, el_n):
+                i, j = random.randint(0, self.size - 1), random.randint(0, self.size - 1)
+                self.matrix[i, j] = random.randint(self.low, self.high) * mult
+
         self.fill_matrix = filler
         return self
 
@@ -64,10 +81,10 @@ class MatrixBuilder:
 test_matrices = [
 
     np.matrix([
-        [7, 3, -1, 2],
-        [3, 8, 1, -4],
-        [-1, 1, 4, -1],
-        [2, -4, -1, 6],
+        [790000, 3, -1, 2],
+        [33, 8, 15, -4],
+        [-1, 2, 4, -1212312],
+        [20, -4, -10, 6],
     ], dtype=default_type),
 
     np.matrix([
