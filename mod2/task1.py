@@ -29,3 +29,56 @@
 #
 #
 #
+
+import numpy as np
+
+
+# Golub, van Loun 4rd ed., p. 632
+def conj_gradients_method(A: np.matrix, b: np.ndarray, x_0: np.ndarray):
+    x = {};
+    r = {};
+    beta = {};
+    alpha = {};
+    q = {};
+    c = {};
+    d = {};
+    nu = {};
+    l = {};
+    x[0] = x_0
+    r[0] = b - A @ x_0
+    beta[0] = np.linalg.norm(r[0], ord=2)
+    q[0] = 0
+    c[0] = 0
+
+    k = 0
+    while beta[k] != 0:
+        q[k + 1] = r[k] / beta[k]
+        k += 1
+        alpha[k] = q[k].transpose() * A * q[k]
+
+        if k == 1:
+            d[1] = alpha[1];
+            nu[1] = beta[0] / d[1]
+            c[k] = q[1]
+        else:
+            l[k - 1] = beta[k - 1] / d[k - 1];
+            d[k] = alpha[k] - beta[k - 1] * l[k - 1];
+            nu[k] = -beta[k - 1] * nu[k - 1] / d[k]
+            c[k] = q[k] - l[k - 1] * c[k - 1]
+
+        x[k] = x[k - 1] + nu[k] * c[k]
+        r[k] = A * q[k] - alpha[k] * q[k] - beta[k - 1] * q[k - 1]
+        beta[k] = np.linalg.norm(r[k], ord=2)
+        print(k, x[k])
+
+    x_star = x[k]
+    return x_star
+
+
+if __name__ == "__main__":
+    A = np.array([[1, 3],
+                  [3, 1]])
+    b = np.array([1, 2])
+    x_0 = np.array([5.5 / 8, 1 / 8])
+    x_star = conj_gradients_method(A, b, x_0)
+    print(x_star)
