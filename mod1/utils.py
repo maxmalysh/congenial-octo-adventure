@@ -59,6 +59,63 @@ class MatrixBuilder:
         self.fill_matrix = filler
         return self
 
+    def stieltjes(self):
+        def filler():
+            positive_definite = False
+
+            while not positive_definite:
+                for i in range(0, self.size):
+                    for j in range(0, self.size):
+                        high = 0 if i != j else self.high
+                        value = np.random.randint(self.low, high=high)
+                        self.matrix[i, j] = value
+                        self.matrix[j, i] = value
+
+                try:
+                    np.linalg.cholesky(self.matrix)
+                    positive_definite = True
+                except np.linalg.LinAlgError as e:
+                    positive_definite = False
+
+        self.fill_matrix = filler
+        return self
+
+    def sparse_stieltjes(self, extra_elements=None):
+        if extra_elements == None:
+            extra_elements = self.size
+
+        def filler():
+            positive_definite = False
+
+            while not positive_definite:
+                self.matrix = np.zeros(dtype=default_type, shape=(self.size, self.size))
+                for i in range(0, self.size):
+                    self.matrix[i, i] =  np.random.randint(self.low, high=self.high)
+
+                for n in range(0, int(extra_elements / 2)):
+                    i, j = random.randint(0, self.size - 1), random.randint(0, self.size - 1)
+                    value = random.randint(self.low, 0)
+                    self.matrix[i, j] = value
+                    self.matrix[j, i] = value
+
+                try:
+                    np.linalg.cholesky(self.matrix)
+                    positive_definite = True
+                except np.linalg.LinAlgError as e:
+                    positive_definite = False
+
+        self.fill_matrix = filler
+        return self
+
+    def hilbert(self):
+        def filler():
+            for i in range(0, self.size):
+                for j in range(0, self.size):
+                    self.matrix[i, j] = 1.0 / (i+j+1)
+
+        self.fill_matrix = filler
+        return self
+
     def _get_default_filler(self):
         def filler():
             for i in range(0, self.size):
@@ -75,6 +132,8 @@ class MatrixBuilder:
         if self.nonsingular:
             while self._singular():
                 self.fill_matrix()
+        else:
+            self.fill_matrix()
         return self.matrix
 
 
