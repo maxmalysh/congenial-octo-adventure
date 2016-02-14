@@ -94,6 +94,9 @@ def conj_grad(A: np.matrix, b: np.ndarray, x_0: np.ndarray):
         x[k] = x[k-1] + mu[k] * p[k]
         r[k] = r[k-1] - mu[k] * (A @ p[k])
 
+        if k > 300:
+            raise ValueError("Does not converge")
+
     x_star = x[k]
     return x_star, k
 
@@ -137,6 +140,9 @@ def conj_grad_precond(A: np.matrix, b: np.ndarray, x_0: np.ndarray, precond_func
         x[k] = x[k-1] + mu * p[k]
         r[k] = r[k-1] - mu * (A @ p[k])
         z[k] = lu_solve(L, U, r[k])
+
+        if k > 300:
+            raise ValueError("Does not converge")
 
     x_star = x[k]
     return x_star, k
@@ -211,7 +217,7 @@ if __name__ == "__main__":
             x_0 = np.array([0] * A.shape[0], dtype=float)
 
             x_star, k = conj_grad(A.copy(), b, x_0)
-            print("CONJ GRAD, iterations: " + str(k))
+            #print("CONJ GRAD, iterations: " + str(k))
 
             iter_n = 10
 
@@ -221,11 +227,12 @@ if __name__ == "__main__":
             miluplot = []
 
             for k in range(0, iter_n):
-                x_star, iters = conj_grad_precond(A.copy(), b, x_0, lambda A: ilu_k(A, 0, e=0.00000001*(10**k)))
-                print("PRECOND CONJ GRAD, iterations: " + str(iters))
-                iluplot.append(iters)
+                #x_star, iters = conj_grad_precond(A.copy(), b, x_0, lambda A: ilu_k(A, 0, e=0.00000001*(10**k)))
+                #print("PRECOND CONJ GRAD, iterations: " + str(iters))
+                #iluplot.append(iters)
+                pass
             plt.plot(plainplot, color='g')
-            plt.plot(iluplot, color='b')
+            #plt.plot(iluplot, color='b')
 
             conv_mat_count += 1
         except ValueError as e:
