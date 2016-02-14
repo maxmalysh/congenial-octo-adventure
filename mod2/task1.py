@@ -29,21 +29,102 @@
 #
 #
 #
-
 import numpy as np
 import math
 from typing import Tuple, Set
+import matplotlib.pyplot as plt
+import pickle
+
+
+from mod1.utils import MatrixBuilder, get_random_vector
+
+filename = "/Users/o2genum/Downloads/systems2.bin"
+
+def get_systems():
+    dense_number = 0
+    sparse_number = 200
+
+    # Try to read some already generated matrices
+    try:
+        with open(filename, 'rb') as input:
+            system_set_dense, system_set_sparse = pickle.load(input)
+    except FileNotFoundError:
+        system_set_dense, system_set_sparse = [], []
+
+    if len(system_set_dense) == dense_number and len(system_set_sparse) == sparse_number:
+        print("Got %d dense and %d sparse systems" % (len(system_set_dense), len(system_set_sparse)))
+        return system_set_dense, system_set_sparse
+
+    # Otherwise generate new matrices
+    for i in range(0, dense_number):
+        print('.', end='', flush=True)
+        matrix = MatrixBuilder(4).stieltjes().nonsingular().gen()
+        vector = get_random_vector(4)
+        system_set_dense.append( (matrix, vector) )
+
+    for i in range(0, sparse_number):
+        print('x', end='', flush=True)
+        matrix = MatrixBuilder(9).sparse_stieltjes().nonsingular().gen()
+        vector = get_random_vector(9)
+        system_set_sparse.append( (matrix, vector) )
+    print('\n')
+
+    # And save them for the next time
+    with open(filename, 'wb') as output:
+        pickle.dump([system_set_dense, system_set_sparse], output, pickle.HIGHEST_PROTOCOL)
+
+    return system_set_dense, system_set_sparse
+
+def conj_grad(A: np.matrix, b: np.ndarray, x_0: np.ndarray):
+    k = 0
+    r = {}; r[0] = b - A @ x_0
+    x = {}; x[0] = x_0
+    p = {}
+    tau = {}
+    mu = {}
+
+    while not math.isclose(np.linalg.norm(r[k], ord=2), 0):
+        k += 1
+        if k == 1:
+            p[k] = r[0]
+        else:
+            tau[k-1] = (r[k-1].transpose() @ r[k-1]) / (r[k-2].transpose() @ r[k-2])
+            p[k] = r[k-1] + tau[k-1] * p[k-1]
+        mu[k] = (r[k-1].transpose() @ r[k-1]) / (p[k].transpose() @ A @ p[k])
+        x[k] = x[k-1] + mu[k] * p[k]
+        r[k] = r[k-1] - mu[k] * (A @ p[k])
+
+    x_star = x[k]
+    return x_star, k
+
+
+def lu_solve(L: np.matrix, R: np.matrix, b: np.array) -> np.array:
+    y = np.zeros(b.size)
+    for m in range(0, b.size):
+        y[m] = b[m] - sum(
+            L[m][i] * y[i] for i in range(0, m)
+        )
+        y[m] /= L[m][m]
+
+    x = np.zeros(b.size)
+    for k in reversed(range(0, b.size)):
+        x[k] = y[k] - sum(
+                R[k][i] * x[i] for i in range(k + 1, b.size)
+        )
+        x[k] /= R[k][k]
+
+    return x
+
 
 def conj_grad_precond(A: np.matrix, b: np.ndarray, x_0: np.ndarray, precond_func):
     k = 0
-    r = {}; r[0] = A @ x_0 - b
+    r = {}; r[0] = b - A @ x_0
     x = {}; x[0] = x_0
     z = {}
     p = {}
 
     L, U = precond_func(A)
-    M = L @ U
-    z[0] = np.linalg.solve(M, r[0])
+    z[0] = lu_solve(L, U, r[0])
 
     while not math.isclose(np.linalg.norm(r[k], ord=2), 0):
         k += 1
@@ -53,9 +134,9 @@ def conj_grad_precond(A: np.matrix, b: np.ndarray, x_0: np.ndarray, precond_func
             tau = (r[k-1].transpose() @ z[k-1]) / (r[k-2].transpose() @ z[k-2])
             p[k] = z[k-1] + tau * p[k-1]
         mu = (r[k-1].transpose() @ z[k-1]) / (p[k].transpose() @ A @ p[k])
-        x[k] = x[k-1] - mu * p[k]
+        x[k] = x[k-1] + mu * p[k]
         r[k] = r[k-1] - mu * (A @ p[k])
-        z[k] = np.linalg.solve(M, r[k])
+        z[k] = lu_solve(L, U, r[k])
 
     x_star = x[k]
     return x_star, k
@@ -83,15 +164,7 @@ def matrix_portrait(A: np.matrix, e: float = None) -> Set[Tuple[int, int]]:
         return Omega
 
 
-def s_compute(R: np.matrix, i: int):
-    n = R.shape[0]
-    s_i = 0
-    for j in range(0, n):
-        if j != i:
-            s_i += R[i, j]
-    return s_i
-
-def incomplete_lu(A: np.matrix, Omega: Set[Tuple[int, int]], modified: bool) -> Tuple[np.matrix, np.matrix]:
+def incomplete_lu(A: np.matrix, Omega: Set[Tuple[int, int]], modified: bool = False) -> Tuple[np.matrix, np.matrix]:
     A = A.copy()
     n = A.shape[0]
     L = np.eye(n, dtype=float)
@@ -99,15 +172,16 @@ def incomplete_lu(A: np.matrix, Omega: Set[Tuple[int, int]], modified: bool) -> 
 
     for k in range(0, n):
         for i in range(k, n):
-            R[k, i] = A[k, i] if (k, i) in Omega else 0
+            if (k, i) in Omega:
+                R[k, i] = A[k, i]
+            elif modified:
+                R[k, k] -= A[k, i]
+                R[k, i] = 0
         for j in range(k + 1, n):
             L[j, k] = A[j, k] / A[k, k] if (j, k) in Omega else 0
         for p in range(k + 1, n):
             for q in range(k + 1, n):
-                if not modified:
                     A[p, q] -= L[p, k]*R[k, q]
-                else:
-                    A[p, q] -= L[p, k]*(R[k, q] - (s_compute(R, k) if p==q else 0))
 
     return L, R
 
@@ -124,20 +198,37 @@ def ilu_k(A: np.matrix, k: int, modified: bool = False, e: float = None) -> Tupl
 
 if __name__ == "__main__":
     np.set_printoptions(precision=4)
-    A = np.array(
-       [[ 77., -23., -32.,   0.,   0.],
-       [-23.,  53.,   0.,   0., -18.],
-       [-32.,   0.,  90.,  -5.,   0.],
-       [  0.,   0.,  -5.,  49., -15.],
-       [  0., -18.,   0., -15.,  89.]], dtype=float)
+    dense_set, sparse_set = get_systems()
+    test_set = sparse_set
 
-    b = np.array([1, 1, 1, 1, 1], dtype=float)
-    x_0 = np.array([0, 0, 0, 0, 0], dtype=float)
+    conv_mat_count = 0
+    for mat_i in range(0, len(test_set)):
 
-    x_star = np.linalg.solve(A.copy(), b)
-    print("NUMPY:")
-    print(x_star)
+        try:
+            A = test_set[mat_i][0]
+            b = test_set[mat_i][1]
 
-    x_star, k = conj_grad_precond(A.copy(), b, x_0, lambda A: ilu_k(A, 10))
-    print("PRECOND CONJ GRAD, iterations: " + str(k))
-    print(x_star)
+            x_0 = np.array([0] * A.shape[0], dtype=float)
+
+            x_star, k = conj_grad(A.copy(), b, x_0)
+            print("CONJ GRAD, iterations: " + str(k))
+
+            iter_n = 10
+
+            plainplot = [k] * iter_n
+
+            iluplot = []
+            miluplot = []
+
+            for k in range(0, iter_n):
+                x_star, iters = conj_grad_precond(A.copy(), b, x_0, lambda A: ilu_k(A, 0, e=0.00000001*(10**k)))
+                print("PRECOND CONJ GRAD, iterations: " + str(iters))
+                iluplot.append(iters)
+            plt.plot(plainplot, color='g')
+            plt.plot(iluplot, color='b')
+
+            conv_mat_count += 1
+        except ValueError as e:
+            continue
+    print("Conv matrices: " + str(conv_mat_count))
+    plt.show()
